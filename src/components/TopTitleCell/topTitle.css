@@ -1,0 +1,112 @@
+.TitleCellCointainer {
+    font-family: 'Inter';
+    font-style: normal;
+    width: 100%;
+    height: 196px;
+    border-bottom: 1px solid #EBEBEB;
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.InfoContainer{
+    flex: 1;
+    padding-right: 42px;
+}
+
+.RecTitle {
+
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    color :transparent; 
+    background-clip:text;
+    background-image: linear-gradient(to right,  #ffee00,  #ff0000, #ffee00,#ffe601);
+    margin-bottom: 4px;
+}
+
+.RecTitleContent {
+    width: 100%;
+    height: 52px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 26px;
+    color: #333333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 20px;
+}
+
+.DataArea {
+    width: 100%;
+    display: flex;
+}
+
+.DataAreaHalf {
+    flex: 1;
+}
+
+.OriTitle {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    color: #717171;
+    margin-bottom: 4px;
+}
+
+.OriTitleContent {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 22px;
+    width: 297px;
+    color: #1A1A1A;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.OriTitleContent > a {
+    color: #1A1A1A;
+}
+
+.DataAreaRight {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+}
+
+.DataCell{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 64px;
+}
+
+.DataCellTitle {
+    font-weight: 600;
+    color: #717171;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.DataCellContent {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 22px;
+    color: #0F7B0F;
+    height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+.GrowthData > svg{
+    margin-right: 4px;
+    position: relative;
+    top: 1px;
+}
+

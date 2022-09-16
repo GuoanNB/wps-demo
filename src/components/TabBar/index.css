@@ -1,0 +1,32 @@
+.tab {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+.tab svg {
+    height: 20px;
+    margin-inline-end: 6px;
+}
+.tab img {
+    width: 16px;
+    height: 14px;
+    margin-inline-end: 6px;
+}
+.tab-button {
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-style: normal;
+}
+.active {
+    position: relative;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    background-clip: padding-box, border-box;
+    background-origin: padding-box, border-box;
+    background-image: linear-gradient(to right, #fff, #fff), linear-gradient(to right, #F4A628, #A829FE);
+    background-size: 100% 100%;
+}
