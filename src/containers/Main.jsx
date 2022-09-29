@@ -1,138 +1,120 @@
 import './index.css';
-import 'antd/dist/antd.min.css';
 
-import { Logo, NameCard, Shape, Start } from './assets';
-
-import HeadlineGenerator from "../components/HeadlineGenerator";
-import ImageSlice from "../components/ImageSlice";
 import React from 'react';
-import TrendingTopic from "../components/TrendingTopic";
-import Footer from "./Footer"
+import axios from 'axios';
+import { config } from "../utils/web-office-sdk-v1.1.19.es.js";
 
-const Main = () => {
-  const trendingTopicExplorerRef = React.useRef(null);
-  const headlineGeneratorRef = React.useRef(null);
-  const videoEditingRef = React.useRef(null);
-  const topContainerRef = React.useRef(null);
+// const wx = window.wx;
+const Main = (props) => {
+
+  // wx.miniProgram.postMessage({ data: {foo: 'bar'} })
+
+  const refreshToken = async () => {
+    // 自身业务处理...
+    // 可以返回 Promise 或者 return { token, timeout }
+    return Promise.resolve({
+      token: "dd8bda649935479bb9e2af2ad84892a4", // 必需：你需要设置的 token
+      timeout: 10 * 600 * 1000, //  必需：token 超时时间，以 10 分钟示例
+    });
+  };
+  const iframeRef = React.useRef(null);
+
+  const init = async (fileId, fileName, fileUrl) => {
+    const accToken = await axios.get("http://82.157.243.144:6443/getWXAccToken");
+
+    console.log("accToken", accToken);
+    const {data: {
+      expires_in, token, wpsUrl
+    }} = await axios.get(`http://82.157.243.144:6443/getUrlAndToken?fileid=${fileId}&filename=${fileName}&fileurl=${fileUrl}`);
+    // const {data: {
+    //   expires_in, token, wpsUrl
+    // }} = await axios.get("http://82.157.243.144:6443/getUrlAndToken?fileid=3007808831");
+    // console.log("testREstestREs", wpsUrl);
+    // console.log("token", token);
+
+    const jssdk = config({
+      url: wpsUrl, // 该地址需要后端提供，https://wwo.wps.cn/office/p/xxx,
+      mount: document.querySelector('.mount-container'),
+      refreshToken
+    });
+    jssdk.setToken({token: token})
+    iframeRef.current = jssdk.iframe;
+    await jssdk.ready();
+    const events = await jssdk.Events;
+    // console.log("events", events)
+
+    // // 监听幻灯片Active Slice事件
+    jssdk.ApiEvent.AddApiEventListener('ActiveSlideChange', (e) => {
+      const { Data: {slideIndex, finished }} = e 
+      setActiveIndex(slideIndex + 1) // 似乎是从零开始的
+      console.log("ActiveSlideChange", slideIndex)
+    })
+  
+    //监听PDF页码变化
+    jssdk.ApiEvent.AddApiEventListener("CurrentPageChange", (data) => {
+      console.log("CurrentPageChange PDF: ", data);
+      setActiveIndex(data + 1)
+    });
+
+    // jssdk.ApiEvent.AddApiEventListener('SlideShowOnNext', (e) => {
+    //   console.log("SlideShowOnNext SlideShowOnNext==================", e)
+    //   const { Data: {slideIndex }} = e
+    // })
+    
+    
+    // jssdk.ApiEvent.AddApiEventListener('SlideShowOnPrevious', (e) => {
+    //   console.log("SlideShowOnPrevious SlideShowOnPrevious==================", e)
+    //   const { Data: {slideIndex }} = e
+    // })
+
+    // jssdk.ApiEvent.AddApiEventListener('SlideShowOnFirst', (e) => {
+    //   console.log("SlideShowOnFirst SlideShowOnFirst==================", e)
+    //   const { Data: {slideIndex }} = e
+    // })
+  
+    jssdk.ApiEvent.AddApiEventListener('SlideSelectionChanged', (e) => {
+      console.log("SlideSelectionChanged SlideSelectionChanged==================", e)
+      setSelectedIndex(e)
+    })
+    
+    // jssdk.ApiEvent.AddApiEventListener('SlideShowEnd', (e) => {
+    //   console.log("SlideShowEnd SlideShowEnd: ", e);
+    // })
+    // // 取消监听
+    // jssdk.ApiEvent.RemoveApiEventListener('ActiveSlideChange', ActiveSlideChangeHandle)
+
+  }
+  const [activeIndex, setActiveIndex] = React.useState(1);
+  const [selectedIndex, setSelectedIndex] = React.useState(1);
 
 
-  const observerRef = React.useRef(null);
-
-  const [activeSection, setActiveSection] = React.useState({});
-
-  const [isShowNavi, setIsShowNavi] = React.useState(false);
-
-
-  React.useEffect(() =>{
-    observerRef.current = new IntersectionObserver(function(entries) {
-      const tempRec = {};
-      entries.forEach((entry) => {
-        if(entry.target.id === "topContainer") {
-          setIsShowNavi(!entry.isIntersecting)
-        } 
-        tempRec[entry.target.id] = entry.intersectionRatio;
-      })
-      setActiveSection((prevState) => {
-        return {
-          ...prevState, ...tempRec
-        }
-
-      });
-    }, {threshold: [0, 0.25, 0.5, 0.75, 1]});
-    observerRef.current.observe(headlineGeneratorRef.current);
-    observerRef.current.observe(trendingTopicExplorerRef.current);
-    observerRef.current.observe(videoEditingRef.current);
-    observerRef.current.observe(topContainerRef.current);
-    return ()=>{
-      observerRef.current.disconnect();
+  React.useEffect(() => {
+    // fetchFileList();
+    const search = window.location.search?.slice(1)?.split("&")
+    const fileName = search[1]?.split("=")[1]
+    const fileUrl = search[2]?.split("=")[1]
+    // const fileId = search[0]?.split("=")[1].slice(8).split(".")[0] + fileName;
+    const fileId = search[0]?.split("=")[1]
+    if(fileId && fileName && fileUrl) {
+      init(fileId, fileName, fileUrl);
     }
   }, []);
+  const currentIndex = React.useMemo(() => {
+    return `当前页${activeIndex}`;
+  }, [activeIndex]);
 
-  const activeDom = React.useMemo(() => {
-    const res = Object.entries(activeSection)
-    if(!res?.length){
-      return ""
-    }
-    res.sort((a, b) => {
-      return b[1] - a[1]
-    })
-    return res[0][0]
-    
-  }, [activeSection])
-  // console.log("activeSection", activeSection)
   return (
     <div className="App">
-      <header className="App-header">
-        <div className="App-logo">
-          {Logo()}
-          Intelligence home
-        </div>
-       {isShowNavi && <>
-          <div className={`${activeDom === "trendingTopicExplorer" ? "Section-title Active-section-title" : "Section-title"}`} onClick={() => {
-          trendingTopicExplorerRef.current.scrollIntoView();
-              }}>{ Start(activeDom === "trendingTopicExplorer")}Trending topic explorer</div>
-              <div className={`${activeDom === "headlineGenerator" ? "Section-title Active-section-title" : "Section-title"}`} onClick={() => {
-              headlineGeneratorRef.current.scrollIntoView();
-            }}>{Shape(activeDom === "headlineGenerator")}Headline generator</div>
+        <div id="iframe-wrap" className="mount-container"></div>
+        <div id="ActiveIndexIndicator" className='indicator-index'>{currentIndex} 选择页{selectedIndex}</div>
 
-            <div className={`${activeDom === "videoEditing" ? "Section-title Active-section-title" : "Section-title"}`} onClick={() => {
-              videoEditingRef.current.scrollIntoView();
-            }}>{ NameCard( activeDom === "videoEditing")} Video editing</div>
-        
-        </>}
-
-      </header>
-      <div className="App-Container">
-        <div  className="Page-top-area-container" >
-          <div className="Page-top-area-title">
-          Intelligence Empowers Creators
-          </div>
-          <div className="Page-top-sub-title">Microsoft intelligence home helps users to create content and advertise.</div>
-          <div id="topContainer" className="Page-top-cubes-container" ref={topContainerRef}>
-            {/* <div  className="Page-top-cube-border"> */}
-              <div className="Page-top-cube" onClick={() => {
-                trendingTopicExplorerRef.current.scrollIntoView();
-              }}>
-              <div>{Start(false, 40)}</div>
-              Trending topic explorer
-              </div>
-            {/* </div> */}
-
-            {/* <div className="Page-top-cube-border"> */}
-                <div className="Page-top-cube" onClick={() => {
-                  headlineGeneratorRef.current.scrollIntoView();
-                }}>
-                  <div>{Shape(false, 40)}</div>
-                  Headline generator
-                </div>
-            {/* </div> */}
-            {/* <div  className="Page-top-cube-border"> */}
-                <div className="Page-top-cube"  onClick={() => {
-                  videoEditingRef.current.scrollIntoView();
-                }}>
-                <div>{NameCard(false, 40)}</div>
-                Video editing
-                </div>
-            {/* </div> */}
-
-          </div>
-        </div>
-
-        <div id={"trendingTopicExplorer"} className="section-container trendingTopicExplorer" ref={trendingTopicExplorerRef}>
-          <TrendingTopic />
-        </div>
-        <div id="headlineGenerator" ref={headlineGeneratorRef} className="section-container">
-          <HeadlineGenerator />
-        </div>
-        <div id={"videoEditing"} ref={videoEditingRef} className="section-container">
-          <ImageSlice/>
-        </div>
-        <Footer/>
-
-      </div>
     </div>
   );
 }
 
 
 export default Main;
+
+// const ActiveIndexIndicator = ({activeIndex}) => {
+  
+// }
