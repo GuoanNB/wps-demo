@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/wps-demo/static/css/main.01c189a7.css",
-    "main.js": "/wps-demo/static/js/main.31c936f0.js",
+    "main.css": "/wps-demo/static/css/main.cc987046.css",
+    "main.js": "/wps-demo/static/js/main.0a0bff91.js",
     "static/js/787.28cb0dcd.chunk.js": "/wps-demo/static/js/787.28cb0dcd.chunk.js",
     "static/media/Inter-VariableFont_slnt,wght.ttf": "/wps-demo/static/media/Inter-VariableFont_slnt,wght.aadb65ac45347ff46699.ttf",
     "index.html": "/wps-demo/index.html",
-    "main.01c189a7.css.map": "/wps-demo/static/css/main.01c189a7.css.map",
-    "main.31c936f0.js.map": "/wps-demo/static/js/main.31c936f0.js.map",
+    "main.cc987046.css.map": "/wps-demo/static/css/main.cc987046.css.map",
+    "main.0a0bff91.js.map": "/wps-demo/static/js/main.0a0bff91.js.map",
     "787.28cb0dcd.chunk.js.map": "/wps-demo/static/js/787.28cb0dcd.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.01c189a7.css",
-    "static/js/main.31c936f0.js"
+    "static/css/main.cc987046.css",
+    "static/js/main.0a0bff91.js"
   ]
 }
