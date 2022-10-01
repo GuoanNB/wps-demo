@@ -12,31 +12,36 @@ const Main = (props) => {
   const refreshToken = async () => {
     // 自身业务处理...
     // 可以返回 Promise 或者 return { token, timeout }
-    return Promise.resolve({
-      token: "dd8bda649935479bb9e2af2ad84892a4", // 必需：你需要设置的 token
-      timeout: 10 * 600 * 1000, //  必需：token 超时时间，以 10 分钟示例
-    });
+    const {data: {
+      expires_in, token
+    }} = await axios.get(`http://82.157.243.144:6443/getUrlAndToken?fileid=&filename=&fileurl=`);
+    return {
+      token: token, // 必需：你需要设置的 token
+      timeout: expires_in, //  必需：token 超时时间，以 10 分钟示例
+    };
   };
   const iframeRef = React.useRef(null);
 
   const init = async (fileId, fileName, fileUrl) => {
-    const accToken = await axios.get("http://82.157.243.144:6443/getWXAccToken");
-
-    console.log("accToken", accToken);
+    const {data} = await axios.get("http://82.157.243.144:6443/getWXAccToken");
+    setWxToken(data.wx_acc_token);
+    console.log("accToken", data);
     const {data: {
       expires_in, token, wpsUrl
     }} = await axios.get(`http://82.157.243.144:6443/getUrlAndToken?fileid=${fileId}&filename=${fileName}&fileurl=${fileUrl}`);
     // const {data: {
     //   expires_in, token, wpsUrl
     // }} = await axios.get("http://82.157.243.144:6443/getUrlAndToken?fileid=3007808831");
-    // console.log("testREstestREs", wpsUrl);
-    // console.log("token", token);
+
 
     const jssdk = config({
       url: wpsUrl, // 该地址需要后端提供，https://wwo.wps.cn/office/p/xxx,
       mount: document.querySelector('.mount-container'),
-      refreshToken
+      refreshTokenWrapper: refreshToken
     });
+
+    timerRec.current = Date.now();
+  
     jssdk.setToken({token: token})
     iframeRef.current = jssdk.iframe;
     await jssdk.ready();
@@ -46,14 +51,14 @@ const Main = (props) => {
     // // 监听幻灯片Active Slice事件
     jssdk.ApiEvent.AddApiEventListener('ActiveSlideChange', (e) => {
       const { Data: {slideIndex, finished }} = e 
-      setActiveIndex(slideIndex + 1) // 似乎是从零开始的
+      setActiveIndesCB(slideIndex + 1) // 似乎是从零开始的
       console.log("ActiveSlideChange", slideIndex)
     })
   
     //监听PDF页码变化
     jssdk.ApiEvent.AddApiEventListener("CurrentPageChange", (data) => {
       console.log("CurrentPageChange PDF: ", data);
-      setActiveIndex(data + 1)
+      setActiveIndesCB(data + 1)
     });
 
     // jssdk.ApiEvent.AddApiEventListener('SlideShowOnNext', (e) => {
@@ -73,7 +78,7 @@ const Main = (props) => {
     // })
   
     jssdk.ApiEvent.AddApiEventListener('SlideSelectionChanged', (e) => {
-      console.log("SlideSelectionChanged SlideSelectionChanged==================", e)
+      // console.log("SlideSelectionChanged SlideSelectionChanged==================", e)
       setSelectedIndex(e)
     })
     
@@ -85,29 +90,77 @@ const Main = (props) => {
 
   }
   const [activeIndex, setActiveIndex] = React.useState(1);
+
+
+  const setActiveIndesCB = (activeIndex) => {
+    setActiveIndex((prev) => {
+
+      lastPageRec.current = prev;
+      return activeIndex
+    })
+  };
+
   const [selectedIndex, setSelectedIndex] = React.useState(1);
+  const [wxToken, setWxToken] = React.useState("");
+  const [fileID, setFileId] = React.useState("");
+
+
+  const [pageStayTime, setPageStayTime] = React.useState({});
+
+  const timerRec = React.useRef(null);
+  const lastPageRec = React.useRef(1);
+
+  const setPageStayTimeCB = () => {
+    const tempRec = {...pageStayTime}
+    if(tempRec[activeIndex] === undefined) {
+      tempRec[activeIndex] = 0;
+    }
+    if( tempRec[lastPageRec.current] !== undefined) {
+      tempRec[lastPageRec.current] = (tempRec[lastPageRec.current] + (Date.now() - timerRec.current)) / 1000;
+    }
+    setPageStayTime({
+      ...pageStayTime,
+      ...tempRec,
+    })
+
+    lastPageRec.current = activeIndex;
+    timerRec.current = Date.now();
+  };
 
 
   React.useEffect(() => {
-    // fetchFileList();
+    setPageStayTimeCB();
+  }, [activeIndex]);
+
+
+  React.useEffect(() => {
     const search = window.location.search?.slice(1)?.split("&")
     const fileName = search[1]?.split("=")[1]
     const fileUrl = search[2]?.split("=")[1]
     // const fileId = search[0]?.split("=")[1].slice(8).split(".")[0] + fileName;
     const fileId = search[0]?.split("=")[1]
     if(fileId && fileName && fileUrl) {
+      setFileId(fileId);
       init(fileId, fileName, fileUrl);
     }
   }, []);
+
+  // const saveAction = async (fileID) => {
+  //   const res = await axios.post("http://82.157.243.144:6443/saveUserAction", {
+  //     fileID: fileID,
+  //     action: pageStayTime
+  //   })
+  //   console.log("saveAction", res);
+  // }
+
   const currentIndex = React.useMemo(() => {
-    return `当前页${activeIndex}`;
-  }, [activeIndex]);
+    return `当前页${activeIndex}time${pageStayTime[activeIndex]}`;
+  }, [activeIndex, pageStayTime]);
 
   return (
     <div className="App">
         <div id="iframe-wrap" className="mount-container"></div>
-        <div id="ActiveIndexIndicator" className='indicator-index'>{currentIndex} 选择页{selectedIndex}</div>
-
+        {/* <div onClick={() => saveAction(fileID)} id="ActiveIndexIndicator" className='indicator-index'>{currentIndex}</div> */}
     </div>
   );
 }
