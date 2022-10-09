@@ -14,7 +14,7 @@ const Main = (props) => {
     // 可以返回 Promise 或者 return { token, timeout }
     const {data: {
       expires_in, token
-    }} = await axios.get(`http://82.157.243.144:6443/getUrlAndToken?fileid=&filename=&fileurl=`);
+    }} = await axios.get(`https://api.yingoukj.cn/getUrlAndToken?fileid=&filename=&fileurl=`);
     return {
       token: token, // 必需：你需要设置的 token
       timeout: expires_in, //  必需：token 超时时间，以 10 分钟示例
@@ -23,12 +23,14 @@ const Main = (props) => {
   const iframeRef = React.useRef(null);
 
   const init = async (fileId, fileName, fileUrl) => {
-    const {data} = await axios.get("http://82.157.243.144:6443/getWXAccToken");
+    // const {data} = await axios.get("http://82.157.243.144:6443/getWXAccToken");
+    const {data} = await axios.get("https://api.yingoukj.cn/getWXAccToken");
+
     setWxToken(data.wx_acc_token);
     console.log("accToken", data);
     const {data: {
       expires_in, token, wpsUrl
-    }} = await axios.get(`http://82.157.243.144:6443/getUrlAndToken?fileid=${fileId}&filename=${fileName}&fileurl=${fileUrl}`);
+    }} = await axios.get(`https://api.yingoukj.cn/getUrlAndToken?fileid=${fileId}&filename=${fileName}&fileurl=${fileUrl}`);
     // const {data: {
     //   expires_in, token, wpsUrl
     // }} = await axios.get("http://82.157.243.144:6443/getUrlAndToken?fileid=3007808831");
