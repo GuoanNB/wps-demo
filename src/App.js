@@ -8,7 +8,7 @@ import React from 'react';
 const App = () => {
   return (
     <React.StrictMode>
-    <BrowserRouter basename="/wps-demo">
+    <BrowserRouter>
       <Routes>
         {/* <Route path="/id/:fileid/name/:filename/url/:fileurl" element={<Main />}/> */}
         <Route path="/" element={<Main />}/>
