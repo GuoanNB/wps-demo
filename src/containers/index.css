@@ -21,3 +21,15 @@
 
     background: green;
   }
+
+  .return-btn {
+    width: 42px;
+    height: 26px;
+    line-height: 26px;
+    text-align: center;
+    cursor: pointer;
+    color: #1A1A1A;
+    background: white;
+    position: fixed;
+    top: 20px;
+  }

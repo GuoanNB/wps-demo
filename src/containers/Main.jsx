@@ -4,7 +4,8 @@ import React from 'react';
 import axios from 'axios';
 import { config } from "../utils/web-office-sdk-v1.1.19.es.js";
 
-// const wx = window.wx;
+const wx = window.wx;
+
 const Main = (props) => {
 
   // wx.miniProgram.postMessage({ data: {foo: 'bar'} })
@@ -24,10 +25,9 @@ const Main = (props) => {
 
   const init = async (fileId, fileName, fileUrl) => {
     // const {data} = await axios.get("http://82.157.243.144:6443/getWXAccToken");
-    const {data} = await axios.get("https://api.yingoukj.cn/getWXAccToken");
+    // const {data} = await axios.get("https://api.yingoukj.cn/getWXAccToken");
 
-    setWxToken(data.wx_acc_token);
-    console.log("accToken", data);
+    // setWxToken(data.wx_acc_token);
     const {data: {
       expires_in, token, wpsUrl
     }} = await axios.get(`https://api.yingoukj.cn/getUrlAndToken?fileid=${fileId}&filename=${fileName}&fileurl=${fileUrl}`);
@@ -47,22 +47,26 @@ const Main = (props) => {
     jssdk.setToken({token: token})
     iframeRef.current = jssdk.iframe;
     await jssdk.ready();
-    const events = await jssdk.Events;
-    // console.log("events", events)
+    // const events = await jssdk.Events;
 
     // // 监听幻灯片Active Slice事件
     jssdk.ApiEvent.AddApiEventListener('ActiveSlideChange', (e) => {
       const { Data: {slideIndex, finished }} = e 
       setActiveIndesCB(slideIndex + 1) // 似乎是从零开始的
-      console.log("ActiveSlideChange", slideIndex)
     })
   
-    //监听PDF页码变化
+    //监听PDF页码变化, word好像不行
     jssdk.ApiEvent.AddApiEventListener("CurrentPageChange", (data) => {
-      console.log("CurrentPageChange PDF: ", data);
       setActiveIndesCB(data + 1)
     });
 
+    jssdk.ApiEvent.AddApiEventListener("WindowScrollChange", (data) => {
+      const {Data: {scrollTop, clientHeight}} = data;
+      const pageIdx = Math.floor(scrollTop / clientHeight) + 1;
+      if(pageIdx === activeIndex) return;
+      setActiveIndesCB(pageIdx)
+    });
+    
     // jssdk.ApiEvent.AddApiEventListener('SlideShowOnNext', (e) => {
     //   console.log("SlideShowOnNext SlideShowOnNext==================", e)
     //   const { Data: {slideIndex }} = e
@@ -79,16 +83,9 @@ const Main = (props) => {
     //   const { Data: {slideIndex }} = e
     // })
   
-    jssdk.ApiEvent.AddApiEventListener('SlideSelectionChanged', (e) => {
-      // console.log("SlideSelectionChanged SlideSelectionChanged==================", e)
-      setSelectedIndex(e)
-    })
-    
-    // jssdk.ApiEvent.AddApiEventListener('SlideShowEnd', (e) => {
-    //   console.log("SlideShowEnd SlideShowEnd: ", e);
+    // jssdk.ApiEvent.AddApiEventListener('SlideSelectionChanged', (e) => {
+    //   setSelectedIndex(e)
     // })
-    // // 取消监听
-    // jssdk.ApiEvent.RemoveApiEventListener('ActiveSlideChange', ActiveSlideChangeHandle)
 
   }
   const [activeIndex, setActiveIndex] = React.useState(1);
@@ -102,9 +99,9 @@ const Main = (props) => {
     })
   };
 
-  const [selectedIndex, setSelectedIndex] = React.useState(1);
-  const [wxToken, setWxToken] = React.useState("");
-  const [fileID, setFileId] = React.useState("");
+  // const [selectedIndex, setSelectedIndex] = React.useState(1);
+  // const [wxToken, setWxToken] = React.useState("");
+  // const [fileID, setFileId] = React.useState("");
 
 
   const [pageStayTime, setPageStayTime] = React.useState({});
@@ -142,7 +139,7 @@ const Main = (props) => {
     // const fileId = search[0]?.split("=")[1].slice(8).split(".")[0] + fileName;
     const fileId = search[0]?.split("=")[1]
     if(fileId && fileName && fileUrl) {
-      setFileId(fileId);
+      // setFileId(fileId);
       init(fileId, fileName, fileUrl);
     }
   }, []);
@@ -155,21 +152,39 @@ const Main = (props) => {
   //   console.log("saveAction", res);
   // }
 
-  const currentIndex = React.useMemo(() => {
-    return `当前页${activeIndex}time${pageStayTime[activeIndex]}`;
-  }, [activeIndex, pageStayTime]);
-
   return (
     <div className="App">
         <div id="iframe-wrap" className="mount-container"></div>
-        {/* <div onClick={() => saveAction(fileID)} id="ActiveIndexIndicator" className='indicator-index'>{currentIndex}</div> */}
+        <div className="return-btn" onClick={() => {
+          wx.miniProgram.postMessage({ data: {
+            ...pageStayTime,
+            [activeIndex]: pageStayTime[activeIndex] !== undefined && pageStayTime[activeIndex] + (Date.now() - timerRec.current) / 1000,
+          }});
+          wx.miniProgram.navigateBack();
+        }}>返回</div>
     </div>
   );
 }
 
-
+// /pages/index/index
 export default Main;
 
 // const ActiveIndexIndicator = ({activeIndex}) => {
   
 // }
+
+// $(function() {
+//   pushHistory();
+//   window.addEventListener("popstate", function(e) {
+//       //首页点击返回,直接关闭网页
+//       WeixinJSBridge.call('closeWindow');
+//       // !!!这里提交监控数据!!!
+//   }, false);
+//   function pushHistory() {
+//       var state = {
+//           title: "title",
+//           url: "#"
+//       };
+//       window.history.pushState(state, state.title, state.url);
+//   }
+// })
