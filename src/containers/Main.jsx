@@ -106,7 +106,7 @@ const Main = (props) => {
 
   const [pageStayTime, setPageStayTime] = React.useState({});
 
-  const timerRec = React.useRef(null);
+  const timerRec = React.useRef(Date.now());
   const lastPageRec = React.useRef(1);
 
   const setPageStayTimeCB = () => {
@@ -121,7 +121,11 @@ const Main = (props) => {
       ...pageStayTime,
       ...tempRec,
     })
-
+    wx.miniProgram.postMessage({ data: {
+      ...pageStayTime,
+      ...tempRec,
+      [activeIndex]: tempRec[activeIndex] + (Date.now() - timerRec.current) / 1000,
+    }});
     lastPageRec.current = activeIndex;
     timerRec.current = Date.now();
   };
