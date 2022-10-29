@@ -26,7 +26,7 @@ const Main = (props) => {
   const init = async (fileId, fileName, fileUrl) => {
     // const {data} = await axios.get("http://82.157.243.144:6443/getWXAccToken");
     // const {data} = await axios.get("https://api.yingoukj.cn/getWXAccToken");
-
+    console.log("fileUrl", fileUrl);
     // setWxToken(data.wx_acc_token);
     const {data: {
       expires_in, token, wpsUrl
