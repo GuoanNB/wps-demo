@@ -164,7 +164,8 @@ const Main = (props) => {
             ...pageStayTime,
             [activeIndex]: pageStayTime[activeIndex] !== undefined && pageStayTime[activeIndex] + (Date.now() - timerRec.current) / 1000,
           }});
-          wx.miniProgram.navigateBack();
+          // wx.miniProgram.navigateBack();
+          wx.miniProgram.switchTab({url: "/pages/index/index"})
         }}>返回</div>
     </div>
   );
