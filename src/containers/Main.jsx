@@ -26,7 +26,7 @@ const Main = (props) => {
   const init = async (fileId, fileName, fileUrl) => {
     // const {data} = await axios.get("http://82.157.243.144:6443/getWXAccToken");
     // const {data} = await axios.get("https://api.yingoukj.cn/getWXAccToken");
-    console.log("fileUrl", fileUrl);
+    // console.log("fileUrl", fileUrl);
     // setWxToken(data.wx_acc_token);
     const {data: {
       expires_in, token, wpsUrl
@@ -35,19 +35,65 @@ const Main = (props) => {
     //   expires_in, token, wpsUrl
     // }} = await axios.get("http://82.157.243.144:6443/getUrlAndToken?fileid=3007808831");
 
-
     const jssdk = config({
       url: wpsUrl, // 该地址需要后端提供，https://wwo.wps.cn/office/p/xxx,
       mount: document.querySelector('.mount-container'),
-      refreshTokenWrapper: refreshToken
+      refreshTokenWrapper: refreshToken,
+      pptOptions: {
+        isShowBottomStatusBar: false, // 是否展示底部状态栏
+        isShowRemarkView: false, // 是否显示备注视图
+        isShowInsertMedia: false, // 是否显示插入音视频入口
+        isShowComment: false, // 是否显示评论相关入口
+      }
     });
+    await jssdk.on('fileOpen', async (data) => {
+      const { fileInfo: {officeType} } = data;
+      await jssdk.ready();
+      if (officeType === 'w') {
+        const WriterHoverToolbars = await app.CommandBars('WriterHoverToolbars');
+        WriterHoverToolbars.Visible = false;
+      }
 
+      if (officeType === 'p') {
+        const mobileCommentMenus = await app.CommandBars('comment');
+        const WPPMobileCommentButton = await app.CommandBars('WPPMobileCommentButton');
+        const WPPMobileMarkButton = await app.CommandBars('WPPMobileMarkButton');
+        const insert = await app.CommandBars('insert');
+        const keyboard = await app.CommandBars('keyboard');
+        const InsertImage = await app.CommandBars('InsertImage');
+        const FloatMenuDownloadImage = await app.CommandBars('FloatMenuDownloadImage');
+        const WPPMobileTimeStamp = await app.CommandBars('WPPMobileTimeStamp');
+        // const Invitation = await app.CommandBars('Invitation');
+        // commentMenus.Visible = false;
+        mobileCommentMenus.Visible = false;
+        WPPMobileMarkButton.Visible = false;
+        insert.Visible = false;
+        keyboard.Visible = false;
+        InsertImage.Visible = false;
+        FloatMenuDownloadImage.Visible = false;
+        WPPMobileCommentButton.Visible = false;
+        WPPMobileTimeStamp.Visible = false;
+      }
+    });
     timerRec.current = Date.now();
-  
     jssdk.setToken({token: token})
     iframeRef.current = jssdk.iframe;
     await jssdk.ready();
     // const events = await jssdk.Events;
+    const app = jssdk.Application;
+
+    // 公共
+      
+    const Cooperation = await app.CommandBars('Cooperation');
+    Cooperation.Visible = false;
+    const More = await app.CommandBars('More');
+    const Logo = await app.CommandBars('Logo');
+    const SendButton = await app.CommandBars('SendButton');
+    const Invitation = await app.CommandBars('Invitation');
+    More.Visible = false;
+    Logo.Visible = false;
+    SendButton.Visible = false;
+    Invitation.Visible = false;
 
     // // 监听幻灯片Active Slice事件
     jssdk.ApiEvent.AddApiEventListener('ActiveSlideChange', (e) => {
@@ -142,8 +188,10 @@ const Main = (props) => {
     const fileUrl = search[2]?.split("=")[1]
     // const fileId = search[0]?.split("=")[1].slice(8).split(".")[0] + fileName;
     const fileId = search[0]?.split("=")[1]
+
     if(fileId && fileName && fileUrl) {
       // setFileId(fileId);
+
       init(fileId, fileName, fileUrl);
     }
   }, []);
