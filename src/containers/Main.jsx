@@ -49,12 +49,44 @@ const Main = (props) => {
     await jssdk.on('fileOpen', async (data) => {
       const { fileInfo: {officeType} } = data;
       await jssdk.ready();
+      const app = jssdk.Application;
+      const Cooperation = await app.CommandBars('Cooperation');
+      Cooperation.Visible = false;
+      const More = await app.CommandBars('More');
+      const Logo = await app.CommandBars('Logo');
+      const SendButton = await app.CommandBars('SendButton');
+      const Invitation = await app.CommandBars('Invitation');
+      More.Visible = false;
+      Logo.Visible = false;
+      SendButton.Visible = false;
+      Invitation.Visible = false;
+
+      // const waterMarks = await app.ActiveDocument.Sections.Item(1).WaterMarks;
+      // console.log("waterMarks", waterMarks);
+      // waterMarks?.DeleteWaterMark();
       if (officeType === 'w') {
+        jssdk.ApiEvent.AddApiEventListener("WindowScrollChange", (data) => {
+          const {Data: {scrollTop, clientHeight}} = data;
+          const pageIdx = Math.floor(scrollTop / clientHeight) + 1;
+          if(pageIdx === activeIndex) return;
+          setActiveIndesCB(pageIdx)
+        });
         const WriterHoverToolbars = await app.CommandBars('WriterHoverToolbars');
         WriterHoverToolbars.Visible = false;
       }
-
+      if(officeType === 'f') {
+        //监听PDF页码变化, word好像不行
+        jssdk.ApiEvent.AddApiEventListener("CurrentPageChange", (data) => {
+          setActiveIndesCB(data + 1)
+        });
+      }
       if (officeType === 'p') {
+    // // 监听幻灯片Active Slice事件
+        jssdk.ApiEvent.AddApiEventListener('ActiveSlideChange', (e) => {
+          const { Data: {slideIndex, finished }} = e 
+          setActiveIndesCB(slideIndex + 1) // 似乎是从零开始的
+        })
+
         const mobileCommentMenus = await app.CommandBars('comment');
         const WPPMobileCommentButton = await app.CommandBars('WPPMobileCommentButton');
         const WPPMobileMarkButton = await app.CommandBars('WPPMobileMarkButton');
@@ -78,41 +110,34 @@ const Main = (props) => {
     timerRec.current = Date.now();
     jssdk.setToken({token: token})
     iframeRef.current = jssdk.iframe;
-    await jssdk.ready();
+    // await jssdk.ready();
     // const events = await jssdk.Events;
-    const app = jssdk.Application;
+    // const app = jssdk.Application;
 
-    // 公共
-      
-    const Cooperation = await app.CommandBars('Cooperation');
-    Cooperation.Visible = false;
-    const More = await app.CommandBars('More');
-    const Logo = await app.CommandBars('Logo');
-    const SendButton = await app.CommandBars('SendButton');
-    const Invitation = await app.CommandBars('Invitation');
-    More.Visible = false;
-    Logo.Visible = false;
-    SendButton.Visible = false;
-    Invitation.Visible = false;
-
-    // // 监听幻灯片Active Slice事件
-    jssdk.ApiEvent.AddApiEventListener('ActiveSlideChange', (e) => {
-      const { Data: {slideIndex, finished }} = e 
-      setActiveIndesCB(slideIndex + 1) // 似乎是从零开始的
-    })
-  
-    //监听PDF页码变化, word好像不行
-    jssdk.ApiEvent.AddApiEventListener("CurrentPageChange", (data) => {
-      setActiveIndesCB(data + 1)
-    });
-
-    jssdk.ApiEvent.AddApiEventListener("WindowScrollChange", (data) => {
-      const {Data: {scrollTop, clientHeight}} = data;
-      const pageIdx = Math.floor(scrollTop / clientHeight) + 1;
-      if(pageIdx === activeIndex) return;
-      setActiveIndesCB(pageIdx)
-    });
     
+    // const waterMarks = await app.ActiveDocument.Sections.Item(1).WaterMarks;
+
+    // // 插入文字水印
+    // await waterMarks.AddTextWaterMark({
+    //   Text: '水印文本', // Text：水印文本
+    //   FontName: '宋体', // FontName：水印字体类型
+    //   FontSize: 40, // FontSize：水印字体大小
+    //   FontColor: '#171717', // FontColor：水印字体颜色
+    //   Transparency: 0.3, // Transparency：透明度
+    //   Gradient: false, // Gradient：倾斜度
+    //   ApplyTo: 1, // ApplyTo：插入位置
+    // });
+    // waterMarks.DeleteWaterMark();
+    // 公共
+    // const waterMarks = await app.ActiveDocument.Sections.Item(1).WaterMarks;
+    // console.log("waterMarks", waterMarks);
+    // // 获取水印
+    // const waterMark = await waterMarks.Item(1);
+    // console.log("获取水印", waterMark);
+  
+    // 设置水印的透明度
+    // waterMark.Transparency = 0;
+
     // jssdk.ApiEvent.AddApiEventListener('SlideShowOnNext', (e) => {
     //   console.log("SlideShowOnNext SlideShowOnNext==================", e)
     //   const { Data: {slideIndex }} = e
@@ -132,7 +157,6 @@ const Main = (props) => {
     // jssdk.ApiEvent.AddApiEventListener('SlideSelectionChanged', (e) => {
     //   setSelectedIndex(e)
     // })
-
   }
   const [activeIndex, setActiveIndex] = React.useState(1);
 
