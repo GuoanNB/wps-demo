@@ -23,9 +23,9 @@
   }
 
   .return-btn {
-    width: 58px;
-    height: 20px;
-    line-height: 20px;
+    /* width: 58px; */
+    height: 25px;
+    line-height: 25px;
     font-size: 12px;
     text-align: center;
     cursor: pointer;
@@ -33,7 +33,7 @@
     opacity: 85%;
     color: white;
     position: fixed;
-    top: 15%;
+    top: 5%;
     border-radius: 0 20px 20px 0;
-    padding-left: 5px;
+    padding:0 5px;
   }

@@ -238,7 +238,7 @@ const Main = (props) => {
           }});
           // wx.miniProgram.navigateBack();
           wx.miniProgram.switchTab({url: "/pages/index/index"})
-        }}> {"< 返回"}</div>
+        }}> {"< 返回首页"}</div>
     </div>
   );
 }
