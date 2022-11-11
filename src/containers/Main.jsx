@@ -48,6 +48,8 @@ const Main = (props) => {
     });
     await jssdk.on('fileOpen', async (data) => {
       const { fileInfo: {officeType} } = data;
+      timerRec.current = Date.now();
+
       await jssdk.ready();
       const app = jssdk.Application;
       const Cooperation = await app.CommandBars('Cooperation');
@@ -65,6 +67,7 @@ const Main = (props) => {
       // console.log("waterMarks", waterMarks);
       // waterMarks?.DeleteWaterMark();
       if (officeType === 'w') {
+        setActiveIndesCB(1);
         jssdk.ApiEvent.AddApiEventListener("WindowScrollChange", (data) => {
           const {Data: {scrollTop, clientHeight}} = data;
           const pageIdx = Math.floor(scrollTop / clientHeight) + 1;
@@ -75,6 +78,7 @@ const Main = (props) => {
         WriterHoverToolbars.Visible = false;
       }
       if(officeType === 'f') {
+        setActiveIndesCB(1);
         //监听PDF页码变化, word好像不行
         jssdk.ApiEvent.AddApiEventListener("CurrentPageChange", (data) => {
           setActiveIndesCB(data + 1)
@@ -105,9 +109,15 @@ const Main = (props) => {
         FloatMenuDownloadImage.Visible = false;
         WPPMobileCommentButton.Visible = false;
         WPPMobileTimeStamp.Visible = false;
-      }
+      };
+
+      // setInterval(() => {
+      //   wx.miniProgram.postMessage({ data: {
+      //     ...pageStayTime
+      //   }});
+      // }, 2000);
+
     });
-    timerRec.current = Date.now();
     jssdk.setToken({token: token})
     iframeRef.current = jssdk.iframe;
     // await jssdk.ready();
@@ -158,16 +168,7 @@ const Main = (props) => {
     //   setSelectedIndex(e)
     // })
   }
-  const [activeIndex, setActiveIndex] = React.useState(1);
 
-
-  const setActiveIndesCB = (activeIndex) => {
-    setActiveIndex((prev) => {
-
-      lastPageRec.current = prev;
-      return activeIndex
-    })
-  };
 
   // const [selectedIndex, setSelectedIndex] = React.useState(1);
   // const [wxToken, setWxToken] = React.useState("");
@@ -176,25 +177,40 @@ const Main = (props) => {
 
   const [pageStayTime, setPageStayTime] = React.useState({});
 
-  const timerRec = React.useRef(Date.now());
-  const lastPageRec = React.useRef(1);
+  const timerRec = React.useRef(null);
+  const lastPageRec = React.useRef(0);
+
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  const setActiveIndesCB = (activeIndex) => {
+    setActiveIndex((prev) => {
+      if(!prev){
+        lastPageRec.current = activeIndex;
+      } else {
+        lastPageRec.current = prev;
+      }
+      return activeIndex
+    })
+  };
 
   const setPageStayTimeCB = () => {
+    if (!activeIndex || !timerRec.current) return; // 文档没加载完
     const tempRec = {...pageStayTime}
     if(tempRec[activeIndex] === undefined) {
       tempRec[activeIndex] = 0;
     }
-    if( tempRec[lastPageRec.current] !== undefined) {
+    if(tempRec[lastPageRec.current] !== undefined) {
       tempRec[lastPageRec.current] = (tempRec[lastPageRec.current] + (Date.now() - timerRec.current)) / 1000;
     }
+
     setPageStayTime({
-      ...pageStayTime,
+      // ...pageStayTime,
       ...tempRec,
     })
     wx.miniProgram.postMessage({ data: {
-      ...pageStayTime,
+      // ...pageStayTime,
       ...tempRec,
-      [activeIndex]: tempRec[activeIndex] + (Date.now() - timerRec.current) / 1000,
+      // [activeIndex]: tempRec[activeIndex] + (Date.now() - timerRec.current) / 1000,
     }});
     lastPageRec.current = activeIndex;
     timerRec.current = Date.now();
@@ -212,10 +228,14 @@ const Main = (props) => {
     const fileUrl = search[2]?.split("=")[1]
     // const fileId = search[0]?.split("=")[1].slice(8).split(".")[0] + fileName;
     const fileId = search[0]?.split("=")[1]
-
+    // WeixinJSBridge.on('onPageStateChange', function(res) {
+    //   console.log('res is active', res.active)
+    // })
+    // wx.miniProgram.getEnv(function(res) {
+    //   console.log("miniprogram", res) // true
+    // })
     if(fileId && fileName && fileUrl) {
       // setFileId(fileId);
-
       init(fileId, fileName, fileUrl);
     }
   }, []);
@@ -234,7 +254,7 @@ const Main = (props) => {
         <div className="return-btn" onClick={() => {
           wx.miniProgram.postMessage({ data: {
             ...pageStayTime,
-            [activeIndex]: pageStayTime[activeIndex] !== undefined && pageStayTime[activeIndex] + (Date.now() - timerRec.current) / 1000,
+            [activeIndex]: pageStayTime[activeIndex] ? pageStayTime[activeIndex] + (Date.now() - timerRec.current) / 1000 : 0,
           }});
           // wx.miniProgram.navigateBack();
           wx.miniProgram.switchTab({url: "/pages/index/index"})
