@@ -210,7 +210,7 @@ const Main = (props) => {
     wx.miniProgram.postMessage({ data: {
       // ...pageStayTime,
       ...tempRec,
-      // [activeIndex]: tempRec[activeIndex] + (Date.now() - timerRec.current) / 1000,
+      [activeIndex]: tempRec[activeIndex] + (Date.now() - timerRec.current) / 1000,
     }});
     lastPageRec.current = activeIndex;
     timerRec.current = Date.now();
@@ -228,12 +228,31 @@ const Main = (props) => {
     const fileUrl = search[2]?.split("=")[1]
     // const fileId = search[0]?.split("=")[1].slice(8).split(".")[0] + fileName;
     const fileId = search[0]?.split("=")[1]
-    // WeixinJSBridge.on('onPageStateChange', function(res) {
-    //   console.log('res is active', res.active)
-    // })
-    // wx.miniProgram.getEnv(function(res) {
-    //   console.log("miniprogram", res) // true
-    // })
+    let weixinBoolean = false
+    const ready = () => {
+      console.log('miniprogram')
+
+      if (window.__wxjs_environment === 'miniprogram') {
+      console.log('miniprogram true')
+
+        weixinBoolean = true;
+      }
+    };
+    if (!window.WeixinJSBridge || !window.WeixinJSBridge.invoke) {
+      console.log('WeixinJSBridge', window.WeixinJSBridge)
+
+      document.addEventListener('WeixinJSBridgeReady', ready, false);
+    } else {
+      ready();
+      window.WeixinJSBridge.on('onPageStateChange', res => {
+        console.log('res is active', res.active);
+      });
+    }
+    
+    if (weixinBoolean) {
+        console.log('微信小程序')
+    }
+
     if(fileId && fileName && fileUrl) {
       // setFileId(fileId);
       init(fileId, fileName, fileUrl);
@@ -254,7 +273,7 @@ const Main = (props) => {
         <div className="return-btn" onClick={() => {
           wx.miniProgram.postMessage({ data: {
             ...pageStayTime,
-            [activeIndex]: pageStayTime[activeIndex] ? pageStayTime[activeIndex] + (Date.now() - timerRec.current) / 1000 : 0,
+            [activeIndex]: pageStayTime[activeIndex] ? pageStayTime[activeIndex] + (Date.now() - timerRec.current) / 1000 : (Date.now() - timerRec.current) / 1000,
           }});
           // wx.miniProgram.navigateBack();
           wx.miniProgram.switchTab({url: "/pages/index/index"})
